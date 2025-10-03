@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 
+#define HELPER_ASM_FILE "helper-asm"
+
 typedef int (CALLBACK* ADDTWONUMS)(UINT,UINT);
 
 __declspec(dllimport) int multiply(int, int);
@@ -18,7 +20,7 @@ int main(int argc, char** argv) {
 
   // asmhelper.dll
   
-  HINSTANCE asmHelperDll = LoadLibrary("asmhelper");
+  HINSTANCE asmHelperDll = LoadLibrary(HELPER_ASM_FILE);
   ADDTWONUMS addTwoNums = (ADDTWONUMS)GetProcAddress(asmHelperDll, "addTwoNums");
   int asmRes = addTwoNums(num1, num2);
   printf("res from asmhelper.dll: %d\n", asmRes);

@@ -12,6 +12,8 @@
 #   > ./build --all
 # No options passed is the same as passing --all.
 
+Import-Module ".\scripts\disp.psm1"
+
 $binDir = "bin\"
 $srcDir = "src\"
 $noLogoOption = $args.Contains("--nologo") ? '/nologo' : $null
@@ -19,34 +21,6 @@ $noLogoOption = $args.Contains("--nologo") ? '/nologo' : $null
 $helperCFile = "helper-c"
 $helperAsmFile = "helper-asm"
 $mainFile = "main"
-
-function Write-BuildStep {
-    param (
-        [Parameter(Mandatory)]
-        [string]$stepName
-    )
-
-    Write-Host "`nBuilding " -NoNewline -ForegroundColor Blue
-    Write-Host $stepName -NoNewline
-    Write-Host "..." -ForegroundColor Blue
-}
-
-<#
-.DESCRIPTION
-Write an error message to the console.
-
-.EXAMPLE
-Write-BuildError "uh-oh spaghetti-oh's"
-#>
-function Write-BuildError {
-    param (
-        [Parameter(Mandatory)]
-        [string]$msg
-    )
-
-    Write-Host "Error: " -NoNewline -ForegroundColor Red
-    Write-Host $msg
-}
 
 if (-not (Test-Path "bin")) {
     Write-Host "bin" -NoNewline
@@ -68,39 +42,31 @@ if (-not (Get-Command "link" -ErrorAction SilentlyContinue)) {
 }
 
 # set options based on args
+$shouldBuildAll = $args.Count -eq 0 -or $args.Contains("--all") -or (-not ($args.Contains("--asm-dll")) -and -not ($args.Contains("--c-dll")) -and -not ($args.Contains("--main")))
 $options = @{
-    asmDll = $false
-    cDll   = $false
-    main   = $false
-}
-if ($args.Contains("--c-dll") -or $args.Contains("--all") -or $args.Count -eq 0) {
-    $options["cDll"] = $true
-}
-if ($args.Contains("--asm-dll") -or $args.Contains("--all") -or $args.Count -eq 0) {
-    $options["asmDll"] = $true
-}
-if ($args.Contains("--main") -or $args.Contains("--all") -or $args.Count -eq 0) {
-    $options["main"] = $true
+    asmDll = $args.Contains("--asm-dll") -or $args.Contains("--all") -or $shouldBuildAll
+    cDll   = $args.Contains("--c-dll") -or $args.Contains("--all") -or $shouldBuildAll
+    main   = $args.Contains("--main") -or $args.Contains("--all") -or $shouldBuildAll
 }
 
 # helper.dll
 if ($options["cDll"]) {
-    Write-BuildStep "helper.c"
+    Write-BuildStep "${helperCFile}.c"
     cl "${srcDir}${helperCFile}.c" /LD "/Fo.\${binDir}${helperCFile}.obj" "/Fe.\${binDir}${helperCFile}.dll" $noLogoOption
 }
 if ($LASTEXITCODE -ne 0) { return }
 
 # asmhelper.dll
 if ($options["asmDll"]) {
-    Write-BuildStep "asmhelper.s"
-    ml64 "${srcDir}${helperAsmFile}.s" "/Fo.\${binDir}${helperAsmFile}.obj" /c $noLogoOption
+    Write-BuildStep "${helperAsmFile}.s"
+    ml64 "/Fo.\${binDir}${helperAsmFile}.obj" /c $noLogoOption "${srcDir}${helperAsmFile}.s"
     link "${binDir}${helperAsmFile}.obj" "/out:${binDir}${helperAsmFile}.dll" /dll /noentry $noLogoOption
 }
 if ($LASTEXITCODE -ne 0) { return }
 
 # main.c
 if ($options["main"]) {
-    Write-BuildStep "main.c"
-    cl "${srcDir}${mainFile}.c" "${binDir}${helperCFile}.lib" $noLogoOption
+    Write-BuildStep "${mainFile}.c"
+    cl "${srcDir}${mainFile}.c" "${binDir}${helperCFile}.lib" "/Fo.\${binDir}${mainFile}.obj" "/Fe.\${binDir}${mainFile}.exe" $noLogoOption
 }
 
