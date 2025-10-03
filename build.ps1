@@ -12,6 +12,14 @@
 #   > ./build --all
 # No options passed is the same as passing --all.
 
+$binDir = "bin\"
+$srcDir = "src\"
+$noLogoOption = $args.Contains("--nologo") ? '/nologo' : $null
+
+$helperCFile = "helper-c"
+$helperAsmFile = "helper-asm"
+$mainFile = "main"
+
 function Write-BuildStep {
     param (
         [Parameter(Mandatory)]
@@ -60,7 +68,6 @@ if (-not (Get-Command "link" -ErrorAction SilentlyContinue)) {
 }
 
 # set options based on args
-$noLogoOption = $args.Contains("--nologo") ? '/nologo' : ''
 $options = @{
     asmDll = $false
     cDll   = $false
@@ -79,21 +86,21 @@ if ($args.Contains("--main") -or $args.Contains("--all") -or $args.Count -eq 0) 
 # helper.dll
 if ($options["cDll"]) {
     Write-BuildStep "helper.c"
-    cl helper.c /LD $noLogoOption
+    cl "${srcDir}${helperCFile}.c" /LD "/Fo.\${binDir}${helperCFile}.obj" "/Fe.\${binDir}${helperCFile}.dll" $noLogoOption
 }
 if ($LASTEXITCODE -ne 0) { return }
 
 # asmhelper.dll
 if ($options["asmDll"]) {
     Write-BuildStep "asmhelper.s"
-    ml64 asmhelper.s /c $noLogoOption
-    link asmhelper.obj /dll /noentry $noLogoOption
+    ml64 "${srcDir}${helperAsmFile}.s" /c $noLogoOption
+    link "${binDir}${helperAsmFile}.obj" "/out:${binDir}${helperAsmFile}.dll" /dll /noentry $noLogoOption
 }
 if ($LASTEXITCODE -ne 0) { return }
 
 # main.c
 if ($options["main"]) {
     Write-BuildStep "main.c"
-    cl main.c helper.lib $noLogoOption
+    cl "${srcDir}${mainFile}.c" "${binDir}${helperCFile}.lib" $noLogoOption
 }
 
