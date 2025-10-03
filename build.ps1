@@ -93,7 +93,7 @@ if ($LASTEXITCODE -ne 0) { return }
 # asmhelper.dll
 if ($options["asmDll"]) {
     Write-BuildStep "asmhelper.s"
-    ml64 "${srcDir}${helperAsmFile}.s" /c $noLogoOption
+    ml64 "${srcDir}${helperAsmFile}.s" "/Fo.\${binDir}${helperAsmFile}.obj" /c $noLogoOption
     link "${binDir}${helperAsmFile}.obj" "/out:${binDir}${helperAsmFile}.dll" /dll /noentry $noLogoOption
 }
 if ($LASTEXITCODE -ne 0) { return }
