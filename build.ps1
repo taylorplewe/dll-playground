@@ -12,7 +12,15 @@
 #   > ./build --all
 # No options passed is the same as passing --all.
 
+Remove-Module disp -ErrorAction SilentlyContinue
+Remove-Module help -ErrorAction SilentlyContinue
 Import-Module ".\scripts\disp.psm1"
+Import-Module ".\scripts\help.psm1"
+
+if ($args.Contains("--help") -or $args.Contains("-h")) {
+    Write-Help
+    return
+}
 
 $binDir = "bin\"
 $srcDir = "src\"
