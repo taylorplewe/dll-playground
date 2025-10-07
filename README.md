@@ -1,5 +1,5 @@
 # DLL playground
-I was really interested in one builds a DLL and how a PE executable (`.exe`) interacts with it. This repo is the result of my learning process that followed.
+I was really interested in how one builds a DLL and how a PE executable (`.exe`) interacts with it. This repo is the result of my learning process that followed.
 
 This project contains a DLL built from a C file, exporting functions, and another DLL built from an x86_64 MASM assembly file, also exporting functions.
 
